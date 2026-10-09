@@ -1,0 +1,43 @@
+name: tail-tells
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: pethotel
+      POSTGRES_PASSWORD: pethotel_dev
+      POSTGRES_DB: pethotel
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pethotel"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # S3-compatible local storage, standing in for AWS S3 in local dev.
+  minio:
+    image: quay.io/minio/minio:latest
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: pethotel
+      MINIO_ROOT_PASSWORD: pethotel_dev_secret
+      MINIO_API_CORS_ALLOW_ORIGIN: "*"
+    ports:
+      - "9000:9000" # S3 API
+      - "9001:9001" # Web console
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  pg_data:
+  minio_data:

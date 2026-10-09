@@ -1,0 +1,333 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>UCBarkley — Pet Report Templates</title>
+  <style>
+    :root {
+      --navy: #123d38;
+      --green: #187764;
+      --mint: #dcefe8;
+      --cream: #f4f0e3;
+      --paper: #fffdf8;
+      --ink: #173b37;
+      --muted: #6d7d77;
+      --gold: #dc9b3f;
+      --rose: #d77e78;
+      --blue: #5c88a8;
+      --shadow: 0 18px 55px rgba(17, 58, 52, .14);
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: #e8ece8;
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    button { font: inherit; }
+    img { display: block; width: 100%; height: 100%; object-fit: cover; }
+
+    .template-bar {
+      position: sticky;
+      z-index: 50;
+      top: 0;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 12px 20px;
+      color: white;
+      background: rgba(14, 52, 47, .96);
+      box-shadow: 0 8px 30px rgba(9, 33, 30, .2);
+      backdrop-filter: blur(16px);
+    }
+    .brand { display: flex; align-items: center; gap: 10px; min-width: max-content; }
+    .brand-mark {
+      display: grid;
+      width: 36px;
+      height: 36px;
+      place-items: center;
+      border-radius: 11px;
+      color: var(--navy);
+      background: #d7efe6;
+      font-weight: 900;
+    }
+    .brand small { display: block; color: #a9c6bd; }
+    .tabs { display: flex; gap: 7px; overflow-x: auto; margin-left: auto; padding: 2px; }
+    .tabs button, .print-button {
+      min-width: max-content;
+      cursor: pointer;
+      border: 0;
+      border-radius: 999px;
+      padding: 9px 13px;
+      color: #d8e7e2;
+      background: transparent;
+    }
+    .tabs button.active { color: var(--navy); background: #e1f2ec; font-weight: 800; }
+    .print-button { border: 1px solid #6e9389; }
+
+    .workspace { padding: 38px 20px 70px; }
+    .template { display: none; }
+    .template.active { display: block; }
+    .report {
+      width: min(940px, 100%);
+      min-height: 1180px;
+      margin: 0 auto;
+      overflow: hidden;
+      background: var(--paper);
+      box-shadow: var(--shadow);
+    }
+    .photo { overflow: hidden; background: #d9dfdc; }
+    .eyebrow { letter-spacing: .16em; text-transform: uppercase; font-weight: 800; font-size: 12px; }
+    .pill { display: inline-flex; align-items: center; gap: 6px; border-radius: 999px; padding: 7px 11px; font-weight: 750; font-size: 13px; }
+    .paw { font-size: 15px; }
+    .quote { font-family: Georgia, "Times New Roman", serif; }
+    .template-note {
+      width: min(940px, 100%);
+      margin: 0 auto 12px;
+      color: #58706a;
+      font-size: 14px;
+    }
+
+    /* Template 1 — Storybook */
+    .storybook { background: #fbf7ea; }
+    .story-hero { position: relative; height: 560px; }
+    .story-hero::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 35%, rgba(7,31,28,.86)); }
+    .story-title { position: absolute; z-index: 2; left: 54px; right: 54px; bottom: 46px; color: white; }
+    .story-title h1 { max-width: 650px; margin: 6px 0 10px; font: 700 clamp(48px, 8vw, 84px)/.92 Georgia, serif; }
+    .story-title p { margin: 0; font-size: 18px; color: #deeee8; }
+    .story-content { padding: 48px 54px 60px; }
+    .story-intro { display: grid; grid-template-columns: 1.25fr .75fr; gap: 40px; align-items: start; }
+    .story-intro h2 { margin: 0 0 13px; font: 700 34px/1.1 Georgia, serif; }
+    .story-intro p { color: #536b65; font-size: 17px; line-height: 1.7; }
+    .day-card { border: 1px solid #cbded6; border-radius: 20px; padding: 22px; background: #eff7f3; }
+    .day-card h3 { margin: 0 0 14px; }
+    .day-card dl { display: grid; grid-template-columns: 1fr auto; gap: 11px; margin: 0; }
+    .day-card dt { color: var(--muted); } .day-card dd { margin: 0; font-weight: 800; }
+    .story-gallery { display: grid; grid-template-columns: 1.35fr .65fr; grid-template-rows: 240px 240px; gap: 12px; margin: 42px 0; }
+    .story-gallery .photo { border-radius: 18px; } .story-gallery .photo:first-child { grid-row: 1 / 3; }
+    .story-quote { margin: 0; padding: 30px 40px; border-left: 6px solid var(--gold); background: white; font-size: 27px; line-height: 1.35; }
+    .signature { margin-top: 24px; color: var(--muted); }
+
+    /* Template 2 — Care Card */
+    .care { background: #f7faf8; }
+    .care-header { display: grid; grid-template-columns: 1fr 300px; min-height: 350px; background: var(--navy); color: white; }
+    .care-heading { padding: 48px; }
+    .care-heading .pill { color: var(--navy); background: #d9efe7; }
+    .care-heading h1 { margin: 28px 0 10px; font-size: 64px; line-height: .95; }
+    .care-heading p { color: #bbd4cc; font-size: 18px; }
+    .care-header .photo { margin: 28px 28px 28px 0; border-radius: 24px; }
+    .care-body { padding: 38px 46px 56px; }
+    .care-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 11px; margin-top: -68px; position: relative; }
+    .care-stat { min-height: 124px; padding: 18px; border-radius: 17px; background: white; box-shadow: 0 9px 25px rgba(17,58,52,.1); }
+    .care-stat span { color: var(--muted); font-size: 13px; } .care-stat strong { display: block; margin-top: 14px; font-size: 22px; }
+    .care-stat i { font-style: normal; font-size: 25px; }
+    .care-section { display: grid; grid-template-columns: .8fr 1.2fr; gap: 28px; margin-top: 42px; }
+    .care-section h2 { margin-top: 0; font-size: 28px; }
+    .care-notes { display: grid; gap: 12px; }
+    .care-note { padding: 18px; border-radius: 14px; background: #e8f2ee; }
+    .care-note time { display: block; color: var(--green); font-weight: 800; font-size: 12px; }
+    .care-note p { margin: 7px 0 0; color: #4d625d; }
+    .care-photos { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; height: 260px; margin-top: 34px; }
+    .care-photos .photo { border-radius: 16px; }
+
+    /* Template 3 — Timeline */
+    .timeline-report { padding-bottom: 60px; background: #fffdf9; }
+    .timeline-cover { display: grid; grid-template-columns: 1fr 1fr; min-height: 430px; }
+    .timeline-cover-copy { display: flex; flex-direction: column; justify-content: center; padding: 54px; color: #253f52; background: #e8f0f5; }
+    .timeline-cover-copy h1 { margin: 10px 0; font: 700 66px/.95 Georgia, serif; }
+    .timeline-cover-copy p { color: #647b8a; }
+    .timeline-body { padding: 45px 55px; }
+    .timeline-heading { display: flex; align-items: end; justify-content: space-between; border-bottom: 1px solid #cbd5da; padding-bottom: 15px; }
+    .timeline-heading h2 { margin: 0; font-size: 31px; }
+    .entries { margin-top: 28px; }
+    .entry { position: relative; display: grid; grid-template-columns: 110px 1fr 230px; gap: 24px; padding: 0 0 38px 26px; border-left: 2px solid #aac3d2; }
+    .entry::before { content: ""; position: absolute; left: -8px; top: 5px; width: 14px; height: 14px; border-radius: 50%; background: var(--blue); box-shadow: 0 0 0 5px #e8f0f5; }
+    .entry time { color: var(--blue); font-weight: 900; }
+    .entry h3 { margin: 0 0 7px; } .entry p { margin: 0; color: var(--muted); line-height: 1.6; }
+    .entry .photo { height: 150px; border-radius: 14px; }
+    .entry:last-child { border-left-color: transparent; }
+    .timeline-footer { margin: 0 55px; padding: 24px; border-radius: 16px; color: white; background: #486b82; }
+
+    /* Template 4 — Photo Journal */
+    .journal { padding: 35px; background: #efe6d5; }
+    .journal-inner { min-height: 1110px; padding: 42px; background: #fffdf9; border: 1px solid #ded2bd; }
+    .journal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #302f2b; padding-bottom: 18px; }
+    .journal-header h1 { margin: 0; font: 700 48px/1 Georgia, serif; }
+    .journal-header .stamp { width: 100px; height: 100px; display: grid; place-items: center; border: 2px dashed var(--rose); border-radius: 50%; color: #a8514d; text-align: center; transform: rotate(7deg); font-weight: 900; }
+    .journal-grid { display: grid; grid-template-columns: repeat(12, 1fr); grid-auto-rows: 115px; gap: 14px; margin-top: 35px; }
+    .journal-grid .photo { border: 10px solid white; box-shadow: 0 8px 18px #3c332420; }
+    .journal-grid .photo:nth-child(1) { grid-column: 1 / 8; grid-row: 1 / 4; transform: rotate(-1deg); }
+    .journal-grid .photo:nth-child(2) { grid-column: 8 / 13; grid-row: 1 / 3; transform: rotate(2deg); }
+    .journal-grid .photo:nth-child(3) { grid-column: 8 / 13; grid-row: 3 / 6; transform: rotate(-1deg); }
+    .journal-grid .photo:nth-child(4) { grid-column: 1 / 5; grid-row: 4 / 6; transform: rotate(1deg); }
+    .journal-note { grid-column: 5 / 8; grid-row: 4 / 6; display: flex; align-items: center; padding: 18px; color: #53492f; background: #fff0aa; box-shadow: 0 8px 18px #3c332420; transform: rotate(-2deg); font: 20px/1.4 "Bradley Hand", cursive; }
+    .journal-diary { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 30px; }
+    .journal-diary div { padding: 20px; border-top: 1px solid #bcb19e; }
+    .journal-diary h3 { margin: 0 0 6px; font-family: Georgia, serif; }
+    .journal-diary p { color: var(--muted); }
+
+    /* Template 5 — Postcard */
+    .postcard { background: #fcf7f0; }
+    .postcard-top { position: relative; height: 500px; }
+    .postcard-top::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(18,61,56,.85), transparent 70%); }
+    .postcard-copy { position: absolute; z-index: 2; left: 52px; top: 55px; width: 400px; color: white; }
+    .postcard-copy h1 { margin: 10px 0; font: 700 68px/.95 Georgia, serif; }
+    .postcard-body { padding: 44px 52px 58px; }
+    .postcard-message { display: grid; grid-template-columns: 1.1fr .9fr; gap: 36px; }
+    .postcard-message h2 { margin-top: 0; font: 700 34px/1.1 Georgia, serif; }
+    .postcard-message p { color: var(--muted); font-size: 17px; line-height: 1.7; }
+    .mood-card { padding: 24px; border-radius: 22px; background: #f6dfd3; }
+    .mood-card strong { display: block; margin: 9px 0; font-size: 27px; }
+    .postcard-strip { display: grid; grid-template-columns: 1fr 1.15fr 1fr; gap: 10px; height: 290px; margin: 36px 0; }
+    .postcard-strip .photo { border-radius: 999px 999px 18px 18px; }
+    .postcard-closing { display: flex; justify-content: space-between; gap: 30px; align-items: end; padding-top: 25px; border-top: 1px solid #dacfc1; }
+    .postcard-closing blockquote { margin: 0; max-width: 620px; font-size: 25px; }
+    .postcard-closing .seal { display: grid; flex: 0 0 105px; height: 105px; place-items: center; border-radius: 50%; color: white; background: var(--green); text-align: center; font-weight: 900; }
+
+    @media (max-width: 720px) {
+      .template-bar { align-items: flex-start; flex-wrap: wrap; }
+      .tabs { order: 3; width: 100%; margin: 0; }
+      .workspace { padding: 18px 0 50px; }
+      .template-note { padding: 0 18px; }
+      .report { min-height: auto; box-shadow: none; }
+      .story-title { left: 26px; right: 26px; }
+      .story-content, .timeline-body, .postcard-body { padding: 30px 24px; }
+      .story-intro, .care-section, .postcard-message { grid-template-columns: 1fr; }
+      .story-gallery { grid-template-columns: 1fr 1fr; grid-template-rows: 300px 180px; }
+      .story-gallery .photo:first-child { grid-column: 1 / 3; grid-row: auto; }
+      .care-header, .timeline-cover { grid-template-columns: 1fr; }
+      .care-header .photo { height: 330px; margin: 0 24px 24px; }
+      .care-body { padding: 25px 24px 40px; }
+      .care-stats { grid-template-columns: 1fr 1fr; margin-top: 0; }
+      .entry { grid-template-columns: 75px 1fr; }
+      .entry .photo { grid-column: 2; width: 100%; }
+      .journal { padding: 10px; } .journal-inner { padding: 22px 16px; }
+      .journal-grid { grid-auto-rows: 90px; }
+      .journal-diary { grid-template-columns: 1fr; }
+      .postcard-copy { left: 24px; width: 70%; }
+      .postcard-strip { height: 210px; }
+    }
+
+    @media print {
+      body { background: white; }
+      .template-bar, .template-note { display: none !important; }
+      .workspace { padding: 0; }
+      .report { width: 100%; box-shadow: none; }
+      .template:not(.active) { display: none !important; }
+      @page { size: A4; margin: 0; }
+    }
+  </style>
+</head>
+<body>
+  <nav class="template-bar">
+    <div class="brand"><span class="brand-mark">TT</span><span>Report concepts<small>Fido · Aug 13, 2026</small></span></div>
+    <div class="tabs" aria-label="Report templates">
+      <button class="active" data-template="storybook">1. Storybook</button>
+      <button data-template="care">2. Care Card</button>
+      <button data-template="timeline">3. Timeline</button>
+      <button data-template="journal">4. Photo Journal</button>
+      <button data-template="postcard">5. Postcard</button>
+    </div>
+    <button class="print-button" onclick="window.print()">Print / PDF</button>
+  </nav>
+
+  <main class="workspace">
+    <section class="template active" id="storybook">
+      <p class="template-note"><strong>Storybook:</strong> premium, emotional narrative with a large hero image. Best for boarding stays and memorable updates.</p>
+      <article class="report storybook">
+        <div class="story-hero photo"><img data-photo="0" alt="Fido enjoying the day"><div class="story-title"><span class="eyebrow">UCBarkley · Thursday diary</span><h1>Fido’s very good day</h1><p>August 13, 2026 · Test Pet Hotel</p></div></div>
+        <div class="story-content">
+          <div class="story-intro"><div><h2>A bright start and a happy tail</h2><p>Fido greeted the morning team with his usual happy dance. After breakfast, he joined his friends in the playroom, explored every corner, and found the perfect sunny spot for a quick rest.</p></div><aside class="day-card"><h3>Today at a glance</h3><dl><dt>Breakfast</dt><dd>All eaten</dd><dt>Energy</dt><dd>Playful</dd><dt>Potty</dt><dd>Normal</dd><dt>Medication</dt><dd>Not needed</dd></dl></aside></div>
+          <div class="story-gallery"><div class="photo"><img data-photo="1" alt="Playtime"></div><div class="photo"><img data-photo="2" alt="Friends"></div><div class="photo"><img data-photo="3" alt="Rest time"></div></div>
+          <blockquote class="story-quote">“Fido was the welcoming committee today—he made sure every pup felt ready to play.”</blockquote><p class="signature">With love from Maya and the Test Pet Hotel team ♡</p>
+        </div>
+      </article>
+    </section>
+
+    <section class="template" id="care">
+      <p class="template-note"><strong>Care Card:</strong> highly scannable care information plus concise diary notes. Best for frequent daycare reports.</p>
+      <article class="report care">
+        <header class="care-header"><div class="care-heading"><span class="pill"><span class="paw">●</span> Daily care report</span><h1>Fido</h1><p>Boarding · Day 3 of 5<br>Thursday, August 13</p></div><div class="photo"><img data-photo="4" alt="Fido portrait"></div></header>
+        <div class="care-body">
+          <div class="care-stats"><div class="care-stat"><i>🍽️</i><span>Meals</span><strong>100%</strong></div><div class="care-stat"><i>⚡</i><span>Energy</span><strong>High</strong></div><div class="care-stat"><i>💧</i><span>Water</span><strong>Normal</strong></div><div class="care-stat"><i>💤</i><span>Rest</span><strong>2 naps</strong></div></div>
+          <div class="care-section"><div><span class="eyebrow">Staff summary</span><h2>Comfortable, social, and full of curiosity.</h2><p>Fido settled into the group quickly and responded well to redirection during high-energy play.</p></div><div class="care-notes"><div class="care-note"><time>8:10 AM · Maya</time><p>Finished breakfast and drank water. Morning potty was normal.</p></div><div class="care-note"><time>11:35 AM · Jordan</time><p>Group play with One and Two. Fido loved the tunnel and chased bubbles.</p></div><div class="care-note"><time>3:20 PM · Maya</time><p>Quiet rest after an enrichment puzzle. Calm and content.</p></div></div></div>
+          <div class="care-photos"><div class="photo"><img data-photo="5" alt="Morning"></div><div class="photo"><img data-photo="6" alt="Group play"></div><div class="photo"><img data-photo="7" alt="Afternoon"></div></div>
+        </div>
+      </article>
+    </section>
+
+    <section class="template" id="timeline">
+      <p class="template-note"><strong>Timeline Diary:</strong> connects every photo to a time and staff note. Best when owners want a detailed account of the day.</p>
+      <article class="report timeline-report">
+        <header class="timeline-cover"><div class="timeline-cover-copy"><span class="eyebrow">A day in the life of</span><h1>Fido</h1><p>Test Pet Hotel · August 13, 2026</p></div><div class="photo"><img data-photo="8" alt="Fido cover"></div></header>
+        <div class="timeline-body"><div class="timeline-heading"><h2>Today’s diary</h2><span class="pill" style="background:#e8f0f5;color:#486b82">4 moments saved</span></div>
+          <div class="entries">
+            <div class="entry"><time>8:10 AM</time><div><h3>Good morning, sunshine</h3><p>Fido finished breakfast and headed outside with a spring in his step.</p></div><div class="photo"><img data-photo="9" alt="Morning"></div></div>
+            <div class="entry"><time>11:35 AM</time><div><h3>Friends make playtime better</h3><p>He shared a group-play photo with One and Two. This original photo can appear in every associated pet’s report.</p></div><div class="photo"><img data-photo="2" alt="Group play"></div></div>
+            <div class="entry"><time>1:45 PM</time><div><h3>Puzzle champion</h3><p>Fido worked patiently through his enrichment toy and found every treat.</p></div><div class="photo"><img data-photo="10" alt="Enrichment"></div></div>
+            <div class="entry"><time>4:20 PM</time><div><h3>One last happy lap</h3><p>A relaxed afternoon walk before dinner. Loose leash, lots of sniffing.</p></div><div class="photo"><img data-photo="11" alt="Afternoon"></div></div>
+          </div>
+        </div>
+        <div class="timeline-footer"><strong>Staff note:</strong> Fido had a confident, playful day and is settling beautifully into the routine.</div>
+      </article>
+    </section>
+
+    <section class="template" id="journal">
+      <p class="template-note"><strong>Photo Journal:</strong> playful scrapbook with short handwritten-style notes. Best for photo-heavy updates and a warm boutique feel.</p>
+      <article class="report journal"><div class="journal-inner">
+        <header class="journal-header"><div><span class="eyebrow">Fido’s stay journal</span><h1>Little moments,<br>big tail wags.</h1></div><div class="stamp">DAY 3<br>VERY<br>GOOD DOG</div></header>
+        <div class="journal-grid"><div class="photo"><img data-photo="12" alt="Fido"></div><div class="photo"><img data-photo="13" alt="Play"></div><div class="photo"><img data-photo="14" alt="Friend"></div><div class="photo"><img data-photo="1" alt="Group"></div><div class="journal-note">Made two new friends and showed everyone the fastest route to the toy basket! — Maya</div></div>
+        <div class="journal-diary"><div><h3>Morning favorite</h3><p>Breakfast first, then a long sniff around the garden. He was curious about every new sound.</p></div><div><h3>Afternoon highlight</h3><p>The bubble game was a huge success. Fido stayed engaged and checked in with staff often.</p></div><div><h3>Care notes</h3><p>Meals: all eaten · Water: normal · Potty: normal · Medication: none</p></div><div><h3>Tomorrow</h3><p>We’re planning a quieter scent-enrichment activity after morning group play.</p></div></div>
+      </div></article>
+    </section>
+
+    <section class="template" id="postcard">
+      <p class="template-note"><strong>Warm Postcard:</strong> a concise emotional update with a few strongest photos. Best for daily owner notifications on mobile.</p>
+      <article class="report postcard">
+        <div class="postcard-top photo"><img data-photo="15" alt="Fido hero"><div class="postcard-copy"><span class="eyebrow">A note from today</span><h1>Wish you were here!</h1><p>Fido is having a wonderful stay.</p></div></div>
+        <div class="postcard-body"><div class="postcard-message"><div><h2>Hi, Fido’s family!</h2><p>Today was full of friends, curious sniffing, and plenty of tail wags. Fido ate well, played kindly with the group, and settled down for a peaceful afternoon nap.</p></div><aside class="mood-card"><span class="eyebrow">Today’s mood</span><strong>Happy explorer</strong><span>Playful · Social · Relaxed</span></aside></div>
+          <div class="postcard-strip"><div class="photo"><img data-photo="3" alt="Moment one"></div><div class="photo"><img data-photo="6" alt="Moment two"></div><div class="photo"><img data-photo="9" alt="Moment three"></div></div>
+          <div class="postcard-closing"><blockquote class="quote">“He gave us the biggest smile after playtime. We can’t wait to see what tomorrow brings.”</blockquote><div class="seal">WITH<br>LOVE<br>♡</div></div>
+        </div>
+      </article>
+    </section>
+  </main>
+
+  <script>
+    // Private local test photos are referenced, never copied into this prototype.
+    const photos = [
+      "../../apps/inference/ai-test/queries/fido/Copy of IMG_0249.JPG",
+      "../../apps/inference/ai-test/queries/fido/Copy of IMG_0250.JPG",
+      "../../apps/inference/ai-test/queries/fido/Copy of IMG_0541.JPG",
+      "../../apps/inference/ai-test/queries/fido/Copy of IMG_0544.JPG",
+      "../../apps/inference/ai-test/queries/fido/Copy of IMG_0756.JPG",
+      "../../apps/inference/ai-test/queries/one/File_674.jpeg",
+      "../../apps/inference/ai-test/queries/one/File_677.jpeg",
+      "../../apps/inference/ai-test/queries/two/IMG_0298.JPG",
+      "../../apps/inference/ai-test/queries/two/IMG_0299.JPG",
+      "../../apps/inference/ai-test/queries/two/IMG_0301.JPG",
+      "../../apps/inference/ai-test/queries/one/File_705.jpeg",
+      "../../apps/inference/ai-test/queries/two/IMG_0303.JPG",
+      "../../apps/inference/ai-test/queries/fido/Copy of IMG_0544.JPG",
+      "../../apps/inference/ai-test/queries/one/File_706.jpeg",
+      "../../apps/inference/ai-test/queries/two/IMG_0312.JPG",
+      "../../apps/inference/ai-test/queries/fido/Copy of IMG_0249.JPG"
+    ];
+
+    document.querySelectorAll("img[data-photo]").forEach((image) => {
+      image.src = photos[Number(image.dataset.photo) % photos.length];
+    });
+
+    const tabs = document.querySelectorAll(".tabs button");
+    const templates = document.querySelectorAll(".template");
+    tabs.forEach((tab) => tab.addEventListener("click", () => {
+      tabs.forEach((button) => button.classList.toggle("active", button === tab));
+      templates.forEach((template) => template.classList.toggle("active", template.id === tab.dataset.template));
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }));
+  </script>
+</body>
+</html>

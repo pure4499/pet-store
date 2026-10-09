@@ -1,0 +1,22 @@
+{
+  email {$CADDY_EMAIL}
+}
+
+api.{$DOMAIN} {
+  encode zstd gzip
+  reverse_proxy api:3000
+}
+
+admin.{$DOMAIN} {
+  encode zstd gzip
+  reverse_proxy admin:80
+}
+
+app.ucbarkley.com {
+  encode zstd gzip
+  reverse_proxy admin:80
+}
+
+media.{$DOMAIN} {
+  reverse_proxy minio:9000
+}

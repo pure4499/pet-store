@@ -1,0 +1,21 @@
+node_modules/
+dist/
+build/
+.expo/
+.expo-shared/
+*.log
+.env
+.env.local
+.DS_Store
+coverage/
+.turbo/
+.history/
+.vscode/
+
+# Python
+apps/inference/__pycache__/
+.venv*/
+apps/inference/*.pyc
+
+# Local data volumes
+.docker-data/

@@ -1,0 +1,79 @@
+{
+  "expo": {
+    "name": "UCBarkley Staff",
+    "slug": "tail-tells",
+    "owner": "kaylins-team",
+    "description": "Staff care, check-in support, and pet media capture for UCBarkley facilities.",
+    "scheme": ["ucbarkley", "tailtells"],
+    "version": "1.0.0",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "experiments": {
+      "typedRoutes": true
+    },
+    "ios": {
+      "supportsTablet": false,
+      "buildNumber": "14",
+      "appleTeamId": "Z9SJQ82J9J",
+      "config": {
+        "usesNonExemptEncryption": false
+      },
+      "infoPlist": {
+        "CFBundleDisplayName": "UCBarkley Staff",
+        "NSCameraUsageDescription": "Staff use the camera to photograph pets and scan facility collar QR codes.",
+        "NSMicrophoneUsageDescription": "Staff may record sound with short pet video clips.",
+        "NSPhotoLibraryUsageDescription": "Staff select photos and short videos of pets for their reports."
+      },
+      "bundleIdentifier": "com.ucbarkley.staff"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#E6F4FE",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "CAMERA",
+        "READ_MEDIA_IMAGES",
+        "READ_MEDIA_VIDEO",
+        "android.permission.CAMERA"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "70cb1421-458e-45b2-b7e9-cd94bb5ee9cb"
+      }
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      "expo-background-task",
+      "./plugins/withAutomaticIosSigning",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Staff use the camera to photograph pets and scan facility collar QR codes.",
+          "recordAudioAndroid": false,
+          "barcodeScannerEnabled": true
+        }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "enableSceneSupport": true
+          }
+        }
+      ]
+    ]
+  }
+}

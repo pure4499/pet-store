@@ -1,0 +1,23 @@
+{
+  "name": "ucbarkley",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "apps/api",
+    "apps/worker",
+    "apps/mobile",
+    "apps/admin",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:db": "docker compose up -d postgres minio",
+    "dev:api": "npm run dev --workspace=apps/api",
+    "dev:worker": "npm run dev --workspace=apps/worker",
+    "dev:admin": "npm run dev --workspace=apps/admin",
+    "migrate": "npm run migrate --workspace=apps/api",
+    "build": "npm run build --workspaces --if-present"
+  },
+  "engines": {
+    "node": "^22.13.0 || >=24.3.0"
+  }
+}

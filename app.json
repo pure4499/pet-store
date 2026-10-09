@@ -1,0 +1,14 @@
+{
+  "expo": {
+    "extra": {
+      "eas": {
+        "projectId": "70cb1421-458e-45b2-b7e9-cd94bb5ee9cb"
+      }
+    },
+    "owner": "kaylins-team",
+    "slug": "tail-tells",
+    "ios": {
+      "bundleIdentifier": "com.ucbarkley.staff"
+    }
+  }
+}

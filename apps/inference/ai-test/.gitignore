@@ -1,0 +1,9 @@
+# Local evaluation data may contain private customer/pet photos.
+references/
+queries/
+groups/
+group-results/
+results.html
+results-*.html
+.DS_Store
+__pycache__/
