@@ -344,10 +344,10 @@ export default function App() {
             <NavButton active={view.name === "stays"} icon="●" count={dashboard?.stats.active_sessions} onClick={() => navigate({ name: "stays" })}>Active stays</NavButton>
             <NavButton active={view.name === "customers"} icon="♡" onClick={() => navigate({ name: "customers" })}>Customers</NavButton>
             <NavButton active={view.name === "checkin"} icon="+" onClick={() => navigate({ name: "checkin" })}>Check-in</NavButton>
-            <NavButton active={view.name === "shop"} icon="$" onClick={() => navigate({ name: "shop" })}>Shop & POS</NavButton>
+            {/* <NavButton active={view.name === "shop"} icon="$" onClick={() => navigate({ name: "shop" })}>Shop & POS</NavButton> */}
             <NavButton active={view.name === "upload"} icon="↑" onClick={() => navigate({ name: "upload" })}>Upload photos</NavButton>
             <NavButton active={view.name === "review"} icon="✦" count={dashboard?.stats.photos_to_review} onClick={() => navigate({ name: "review" })}>AI review</NavButton>
-            <NavButton active={view.name === "collars"} icon="▣" onClick={() => navigate({ name: "collars" })}>Collar management</NavButton>
+            {/* <NavButton active={view.name === "collars"} icon="▣" onClick={() => navigate({ name: "collars" })}>Collar management</NavButton> */}
             {canManageUsers && <NavButton active={view.name === "users"} icon="◎" onClick={() => navigate({ name: "users" })}>Users & roles</NavButton>}
           </div>
           <div className="sidebar-stays">
