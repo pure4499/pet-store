@@ -374,7 +374,18 @@ Implemented foundations include:
   disabled or demoted. Every manager-portal user has a profile and can change
   their own password after confirming the current password. Owner administrators
   can reset another user's password. Password changes increment an authentication
-  version so existing refresh sessions must sign in again.
+  version so existing refresh sessions must sign in again. Password age is
+  tracked explicitly; after 60 days, login with the current credential yields
+  only a short-lived, single-purpose reset session. The Staff app and Manager
+  portal require a different password before issuing normal access and refresh
+  tokens. Accounts that predate this tracking begin their first 60-day period
+  when migration `0033_password_expiration.sql` is applied. A hidden,
+  organization-scoped `super_admin` system role sits above owner administrator,
+  inherits every protected API permission, and is exempt from password-age
+  expiration. It is not returned by ordinary user/role management endpoints,
+  cannot be assigned or managed through those endpoints, and appears as owner
+  administrator on the signed-in profile UI. Assignment requires controlled
+  operational database access.
 - Owners, households, pets, sessions, collar assignment, and daily logs.
 - A tenant-scoped commerce foundation with reusable service/product catalog
   items, one charge sheet per stay, immutable line-item name and price

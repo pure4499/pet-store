@@ -9,7 +9,11 @@ interface AuthContextValue {
   isLoading: boolean;
   hasSelectedFacility: boolean;
   selectedFacility: { id: string; name: string } | null;
-  signIn: (email: string, password: string) => Promise<void>;
+  signIn: (email: string, password: string) => Promise<
+    | { passwordChangeRequired: true; passwordResetToken: string }
+    | { passwordChangeRequired: false }
+  >;
+  replaceExpiredPassword: (passwordResetToken: string, newPassword: string) => Promise<void>;
   selectFacility: (facility: { id: string; name: string }) => Promise<void>;
   signOut: () => Promise<void>;
 }
@@ -43,7 +47,18 @@ export function AuthProvider({ children }: PropsWithChildren) {
   }, [queryClient]);
 
   const signIn = async (email: string, password: string) => {
-    await authApi.login(email, password);
+    const result = await authApi.login(email, password);
+    if (result.passwordChangeRequired) return result;
+    queryClient.clear();
+    setIsSignedIn(true);
+    setHasSelectedFacility(false);
+    setSelectedFacility(null);
+    await tokenStore.clearSelectedFacility();
+    return result;
+  };
+
+  const replaceExpiredPassword = async (passwordResetToken: string, newPassword: string) => {
+    await authApi.replaceExpiredPassword(passwordResetToken, newPassword);
     queryClient.clear();
     setIsSignedIn(true);
     setHasSelectedFacility(false);
@@ -68,7 +83,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
 
   return (
     <AuthContext.Provider
-      value={{ isSignedIn, isLoading, hasSelectedFacility, selectedFacility, signIn, selectFacility, signOut }}
+      value={{ isSignedIn, isLoading, hasSelectedFacility, selectedFacility, signIn, replaceExpiredPassword, selectFacility, signOut }}
     >
       {children}
     </AuthContext.Provider>

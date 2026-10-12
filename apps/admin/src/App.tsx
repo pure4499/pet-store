@@ -329,7 +329,7 @@ export default function App() {
       setCheckingOutSessionId(null);
     }
   };
-  const canManageUsers = currentRole === "owner_admin";
+  const canManageUsers = currentRole === "super_admin" || currentRole === "owner_admin";
 
   return (
     <div className="app-shell">
@@ -869,7 +869,7 @@ function ProfilePage({ notify, onSignedOut }: { notify: (value: string) => void;
     <section className="page-intro"><div><span className="eyebrow">Account & security</span><h1>My profile</h1><p>Review your account and change the password you use to sign in.</p></div></section>
     {error && <div className="banner error-banner"><b>Profile action could not finish.</b><span>{error}</span><button onClick={() => setError(null)}>Dismiss</button></div>}
     {profile && <div className="profile-grid">
-      <section className="section-card profile-summary"><span className="pet-avatar">{profile.full_name.slice(0, 1).toUpperCase()}</span><div><span className="eyebrow">Signed in as</span><h2>{profile.full_name}</h2><p>{profile.email}</p><dl><div><dt>Organization</dt><dd>{profile.organization_name}</dd></div><div><dt>Role</dt><dd>{profile.role_name}</dd></div><div><dt>Status</dt><dd>{title(profile.status)}</dd></div></dl></div></section>
+      <section className="section-card profile-summary"><span className="pet-avatar">{profile.full_name.slice(0, 1).toUpperCase()}</span><div><span className="eyebrow">Signed in as</span><h2>{profile.full_name}</h2><p>{profile.email}</p><dl><div><dt>Organization</dt><dd>{profile.organization_name}</dd></div><div><dt>Role</dt><dd>{profile.role_slug === "super_admin" ? "Owner administrator" : profile.role_name}</dd></div><div><dt>Status</dt><dd>{title(profile.status)}</dd></div></dl></div></section>
       <section className="section-card password-card"><div className="section-heading"><div><span className="eyebrow">Security</span><h2>Change password</h2></div></div><form onSubmit={submit}>
         <label>Current password<input type="password" autoComplete="current-password" value={currentPassword} onChange={(event) => setCurrentPassword(event.target.value)} required /></label>
         <label>New password<input type="password" minLength={8} autoComplete="new-password" value={newPassword} onChange={(event) => setNewPassword(event.target.value)} required /></label>
@@ -1095,6 +1095,9 @@ function UploadDesk({ sessions, onChanged, notify, onActivity }: { sessions: Ses
 function Login({ onSuccess }: { onSuccess: () => void }) {
   const [email, setEmail] = useState("staff@example.com");
   const [password, setPassword] = useState("");
+  const [passwordResetToken, setPasswordResetToken] = useState<string | null>(null);
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -1103,7 +1106,20 @@ function Login({ onSuccess }: { onSuccess: () => void }) {
     setBusy(true);
     setError(null);
     try {
-      await api.login(email.trim(), password);
+      if (passwordResetToken) {
+        if (newPassword !== confirmPassword) {
+          setError("The new passwords do not match.");
+          return;
+        }
+        await api.replaceExpiredPassword(passwordResetToken, newPassword);
+      } else {
+        const result = await api.login(email.trim(), password);
+        if (result.passwordChangeRequired) {
+          setPasswordResetToken(result.passwordResetToken);
+          setPassword("");
+          return;
+        }
+      }
       onSuccess();
     } catch (caught) {
       setError(messageOf(caught));
@@ -1123,12 +1139,19 @@ function Login({ onSuccess }: { onSuccess: () => void }) {
       <section className="login-panel">
         <form onSubmit={submit}>
           <span className="eyebrow">Manager access</span>
-          <h2>Welcome back</h2>
-          <p>Use an owner administrator or manager account.</p>
-          <label>Email<input type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} /></label>
-          <label>Password<input type="password" autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value)} autoFocus /></label>
+          <h2>{passwordResetToken ? "Password reset required" : "Welcome back"}</h2>
+          <p>{passwordResetToken ? "For your security, you need to reset your password every 60 days. Your current password has expired, and you cannot sign in until you create a new one." : "Use an owner administrator or manager account."}</p>
+          {!passwordResetToken && <>
+            <label>Email<input type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} /></label>
+            <label>Password<input type="password" autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value)} autoFocus /></label>
+          </>}
+          {passwordResetToken && <>
+            <label>New password<input type="password" minLength={8} autoComplete="new-password" value={newPassword} onChange={(event) => setNewPassword(event.target.value)} autoFocus /></label>
+            <label>Confirm new password<input type="password" minLength={8} autoComplete="new-password" value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} /></label>
+            {confirmPassword && newPassword !== confirmPassword && <div className="form-error">The passwords do not match.</div>}
+          </>}
           {error && <div className="form-error">{error}</div>}
-          <button className="primary-button full" disabled={busy || !email || !password}>{busy ? "Signing in…" : "Open manager portal"}</button>
+          <button className="primary-button full" disabled={busy || (passwordResetToken ? newPassword.length < 8 || newPassword !== confirmPassword : !email || !password)}>{busy ? "Please wait…" : passwordResetToken ? "Reset password & sign in" : "Open manager portal"}</button>
           <small className="api-note">API: {API_URL}</small>
         </form>
       </section>

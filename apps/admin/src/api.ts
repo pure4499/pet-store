@@ -22,6 +22,10 @@ const API_URL = (import.meta.env.VITE_API_URL || "http://localhost:3000").replac
 const ACCESS_KEY = "ucbarkley-admin-access";
 const REFRESH_KEY = "ucbarkley-admin-refresh";
 
+export type LoginResult =
+  | { passwordChangeRequired: true; passwordResetToken: string }
+  | { passwordChangeRequired: false };
+
 class ApiClient {
   get hasSession() {
     return Boolean(localStorage.getItem(ACCESS_KEY));
@@ -40,18 +44,35 @@ class ApiClient {
   }
 
   async login(email: string, password: string) {
-    const response = await this.request<{ accessToken: string; refreshToken: string }>(
+    const response = await this.request<
+      | { passwordChangeRequired: true; passwordResetToken: string }
+      | { passwordChangeRequired: false; accessToken: string; refreshToken: string }
+    >(
       "/auth/login",
       { method: "POST", body: JSON.stringify({ email, password }) },
       false
     );
-    const claims = parseJwt(response.accessToken);
-    if (claims.role !== "owner_admin" && claims.role !== "manager") {
+    if (response.passwordChangeRequired) return response;
+    this.saveSession(response.accessToken, response.refreshToken);
+    return { passwordChangeRequired: false } as const;
+  }
+
+  async replaceExpiredPassword(passwordResetToken: string, newPassword: string) {
+    const response = await this.request<{ accessToken: string; refreshToken: string }>(
+      "/auth/password/expired",
+      { method: "POST", body: JSON.stringify({ passwordResetToken, newPassword }) },
+      false
+    );
+    this.saveSession(response.accessToken, response.refreshToken);
+  }
+
+  private saveSession(accessToken: string, refreshToken: string) {
+    const claims = parseJwt(accessToken);
+    if (claims.role !== "super_admin" && claims.role !== "owner_admin" && claims.role !== "manager") {
       throw new Error("This account does not have manager access.");
     }
-    localStorage.setItem(ACCESS_KEY, response.accessToken);
-    localStorage.setItem(REFRESH_KEY, response.refreshToken);
-    return claims;
+    localStorage.setItem(ACCESS_KEY, accessToken);
+    localStorage.setItem(REFRESH_KEY, refreshToken);
   }
 
   logout() {
@@ -670,7 +691,7 @@ function parseJwt(token: string) {
   return JSON.parse(atob(payload)) as {
     sub: string;
     organizationId: string;
-    role: "owner_admin" | "manager" | "staff";
+    role: "super_admin" | "owner_admin" | "manager" | "staff";
   };
 }
 

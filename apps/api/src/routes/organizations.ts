@@ -126,7 +126,7 @@ organizationsRouter.put(
       const passwordHash = await bcrypt.hash(body.newPassword, 10);
       await client.query(
         `UPDATE users
-         SET password_hash = $1, auth_version = auth_version + 1
+         SET password_hash = $1, password_changed_at = now(), auth_version = auth_version + 1
          WHERE id = $2 AND organization_id = $3`,
         [passwordHash, req.auth!.sub, req.auth!.organizationId]
       );
@@ -159,7 +159,7 @@ organizationsRouter.get(
          FROM users
          JOIN user_role_assignments assignments ON assignments.user_id = users.id
          JOIN roles ON roles.id = assignments.role_id
-         WHERE users.organization_id = $1
+         WHERE users.organization_id = $1 AND roles.slug <> 'super_admin'
          ORDER BY users.full_name, users.email`,
         [req.auth!.organizationId]
       );
@@ -177,7 +177,7 @@ organizationsRouter.get(
       const result = await client.query(
         `SELECT id, slug, display_name, description, priority
          FROM roles
-         WHERE organization_id = $1
+         WHERE organization_id = $1 AND slug <> 'super_admin'
          ORDER BY priority DESC`,
         [req.auth!.organizationId]
       );
@@ -207,6 +207,7 @@ organizationsRouter.post(
         const roleResult = await client.query(
           `SELECT id FROM roles
            WHERE organization_id = $1
+             AND slug IN ('manager', 'staff')
              AND (
                ($2::uuid IS NOT NULL AND id = $2)
                OR ($2::uuid IS NULL AND slug = $3 AND slug IN ('manager', 'staff'))
@@ -296,16 +297,19 @@ organizationsRouter.patch(
   asyncRoute(async (req, res) => {
     const body = updateUserSchema.parse(req.body);
     const user = await withOrgScope(req.auth!.organizationId, async (client) => {
+      const targetRole = await client.query(
+        `SELECT roles.slug
+         FROM users
+         JOIN user_role_assignments assignments ON assignments.user_id = users.id
+         JOIN roles ON roles.id = assignments.role_id
+         WHERE users.id = $1 AND users.organization_id = $2`,
+        [req.params.userId, req.auth!.organizationId]
+      );
+      if (!targetRole.rows[0] || targetRole.rows[0].slug === "super_admin") {
+        throw new HttpError(404, "User not found");
+      }
       if (body.status === "disabled") {
-        const ownerCheck = await client.query(
-          `SELECT roles.slug
-           FROM users
-           JOIN user_role_assignments assignments ON assignments.user_id = users.id
-           JOIN roles ON roles.id = assignments.role_id
-           WHERE users.id = $1 AND users.organization_id = $2`,
-          [req.params.userId, req.auth!.organizationId]
-        );
-        if (ownerCheck.rows[0]?.slug === "owner_admin") {
+        if (targetRole.rows[0].slug === "owner_admin") {
           const otherOwners = await client.query(
             `SELECT count(*)::int AS count
              FROM users
@@ -356,7 +360,11 @@ organizationsRouter.put(
     const facilityIds = [...new Set(body.facilityIds)];
     const assignments = await withOrgScope(req.auth!.organizationId, async (client) => {
       const user = await client.query(
-        `SELECT id FROM users WHERE id = $1 AND organization_id = $2`,
+        `SELECT users.id
+         FROM users
+         JOIN user_role_assignments assignments ON assignments.user_id = users.id
+         JOIN roles ON roles.id = assignments.role_id
+         WHERE users.id = $1 AND users.organization_id = $2 AND roles.slug <> 'super_admin'`,
         [req.params.userId, req.auth!.organizationId]
       );
       if (!user.rows[0]) throw new HttpError(404, "User not found");
@@ -390,8 +398,13 @@ organizationsRouter.put(
     const updated = await withOrgScope(req.auth!.organizationId, async (client) => {
       const result = await client.query(
         `UPDATE users
-         SET password_hash = $1, auth_version = auth_version + 1
+         SET password_hash = $1, password_changed_at = now(), auth_version = auth_version + 1
          WHERE id = $2 AND organization_id = $3
+           AND NOT EXISTS (
+             SELECT 1 FROM user_role_assignments assignments
+             JOIN roles ON roles.id = assignments.role_id
+             WHERE assignments.user_id = users.id AND roles.slug = 'super_admin'
+           )
          RETURNING id`,
         [passwordHash, req.params.userId, req.auth!.organizationId]
       );
@@ -410,7 +423,7 @@ organizationsRouter.put(
     const assignment = await withOrgScope(req.auth!.organizationId, async (client) => {
       const roleResult = await client.query(
         `SELECT id, slug, display_name, description
-         FROM roles WHERE id = $1 AND organization_id = $2`,
+         FROM roles WHERE id = $1 AND organization_id = $2 AND slug <> 'super_admin'`,
         [body.roleId, req.auth!.organizationId]
       );
       const role = roleResult.rows[0];
@@ -425,6 +438,7 @@ organizationsRouter.put(
         [req.params.userId, req.auth!.organizationId]
       );
       if (!currentResult.rows[0]) throw new HttpError(404, "User not found");
+      if (currentResult.rows[0].slug === "super_admin") throw new HttpError(404, "User not found");
       if (currentResult.rows[0].slug === "owner_admin" && role.slug !== "owner_admin") {
         const otherOwners = await client.query(
           `SELECT count(*)::int AS count

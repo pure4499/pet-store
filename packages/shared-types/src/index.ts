@@ -8,7 +8,7 @@ export type ISODateTime = string;
 /** Maximum accepted length for check-in identity and report source clips. */
 export const MAX_SOURCE_VIDEO_DURATION_SECONDS = 30;
 
-export type UserRole = "owner_admin" | "manager" | "staff";
+export type UserRole = "super_admin" | "owner_admin" | "manager" | "staff";
 export type UserStatus = "invited" | "active" | "disabled";
 
 export interface OrganizationRole {

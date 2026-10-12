@@ -14,7 +14,19 @@ async function postJson(path: string, body: unknown) {
 }
 
 export async function login(email: string, password: string) {
-  const data = await postJson("/auth/login", { email, password });
+  const data = await postJson("/auth/login", { email, password }) as
+    | { passwordChangeRequired: true; passwordResetToken: string }
+    | { passwordChangeRequired: false; accessToken: string; refreshToken: string };
+  if (data.passwordChangeRequired) return data;
+  await tokenStore.setTokens(data.accessToken, data.refreshToken);
+  return { passwordChangeRequired: false } as const;
+}
+
+export async function replaceExpiredPassword(passwordResetToken: string, newPassword: string) {
+  const data = await postJson("/auth/password/expired", { passwordResetToken, newPassword }) as {
+    accessToken: string;
+    refreshToken: string;
+  };
   await tokenStore.setTokens(data.accessToken, data.refreshToken);
 }
 

@@ -17,15 +17,30 @@ import { ApiError } from "../src/api/client";
 import { API_URL } from "../src/api/config";
 
 export default function LoginScreen() {
-  const { signIn } = useAuth();
+  const { signIn, replaceExpiredPassword } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [passwordResetToken, setPasswordResetToken] = useState<string | null>(null);
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
     try {
-      await signIn(email.trim(), password);
+      if (passwordResetToken) {
+        if (newPassword !== confirmPassword) {
+          Alert.alert("Passwords do not match", "Enter the same new password in both fields.");
+          return;
+        }
+        await replaceExpiredPassword(passwordResetToken, newPassword);
+      } else {
+        const result = await signIn(email.trim(), password);
+        if (result.passwordChangeRequired) {
+          setPasswordResetToken(result.passwordResetToken);
+          setPassword("");
+        }
+      }
     } catch (err) {
       const message = err instanceof ApiError
         ? err.message
@@ -56,42 +71,70 @@ export default function LoginScreen() {
               <Text style={styles.markText}>TT</Text>
             </View>
             <Text style={styles.eyebrow}>UCBARKLEY</Text>
-            <Text style={styles.title}>Staff sign in</Text>
-            <Text style={styles.subtitle}>Capture the moments pet families are waiting for.</Text>
+            <Text style={styles.title}>{passwordResetToken ? "Password reset required" : "Staff sign in"}</Text>
+            <Text style={styles.subtitle}>{passwordResetToken ? "For your security, you need to reset your password every 60 days. Your current password has expired, and you cannot sign in until you create a new one." : "Capture the moments pet families are waiting for."}</Text>
           </View>
           <View style={styles.form}>
-            <Text style={styles.label}>Email</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="you@facility.com"
-              placeholderTextColor="#98A39F"
-              autoCapitalize="none"
-              autoComplete="email"
-              keyboardType="email-address"
-              returnKeyType="next"
-              value={email}
-              onChangeText={setEmail}
-            />
-            <Text style={styles.label}>Password</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Enter your password"
-              placeholderTextColor="#98A39F"
-              autoComplete="current-password"
-              returnKeyType="done"
-              secureTextEntry
-              value={password}
-              onChangeText={setPassword}
-              onSubmitEditing={() => {
-                if (!isSubmitting && email && password) void handleSubmit();
-              }}
-            />
+            {!passwordResetToken ? <>
+              <Text style={styles.label}>Email</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="you@facility.com"
+                placeholderTextColor="#98A39F"
+                autoCapitalize="none"
+                autoComplete="email"
+                keyboardType="email-address"
+                returnKeyType="next"
+                value={email}
+                onChangeText={setEmail}
+              />
+              <Text style={styles.label}>Password</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Enter your password"
+                placeholderTextColor="#98A39F"
+                autoComplete="current-password"
+                returnKeyType="done"
+                secureTextEntry
+                value={password}
+                onChangeText={setPassword}
+                onSubmitEditing={() => {
+                  if (!isSubmitting && email && password) void handleSubmit();
+                }}
+              />
+            </> : <>
+              <Text style={styles.label}>New password</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="At least 8 characters"
+                placeholderTextColor="#98A39F"
+                autoComplete="new-password"
+                returnKeyType="next"
+                secureTextEntry
+                value={newPassword}
+                onChangeText={setNewPassword}
+              />
+              <Text style={styles.label}>Confirm new password</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Enter the new password again"
+                placeholderTextColor="#98A39F"
+                autoComplete="new-password"
+                returnKeyType="done"
+                secureTextEntry
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
+                onSubmitEditing={() => {
+                  if (!isSubmitting && newPassword.length >= 8 && newPassword === confirmPassword) void handleSubmit();
+                }}
+              />
+            </>}
             <TouchableOpacity
-              style={[styles.button, (isSubmitting || !email || !password) && styles.buttonDisabled]}
+              style={[styles.button, (isSubmitting || (passwordResetToken ? newPassword.length < 8 || newPassword !== confirmPassword : !email || !password)) && styles.buttonDisabled]}
               onPress={handleSubmit}
-              disabled={isSubmitting || !email || !password}
+              disabled={isSubmitting || (passwordResetToken ? newPassword.length < 8 || newPassword !== confirmPassword : !email || !password)}
             >
-              {isSubmitting ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Sign in</Text>}
+              {isSubmitting ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>{passwordResetToken ? "Reset password & sign in" : "Sign in"}</Text>}
             </TouchableOpacity>
           </View>
         </ScrollView>

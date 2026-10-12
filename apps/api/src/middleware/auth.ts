@@ -26,7 +26,7 @@ export function requireAuth(req: Request, res: Response, next: NextFunction) {
 
 export function requireRole(...roles: AccessTokenClaims["role"][]) {
   return (req: Request, res: Response, next: NextFunction) => {
-    if (!req.auth || !roles.includes(req.auth.role)) {
+    if (!req.auth || (req.auth.role !== "super_admin" && !roles.includes(req.auth.role))) {
       return res.status(403).json({ error: "Insufficient permissions" });
     }
     next();

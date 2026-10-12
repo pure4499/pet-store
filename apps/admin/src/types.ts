@@ -410,7 +410,7 @@ export interface ChargeSheet {
   payment_status: "not_connected";
 }
 
-export type UserRoleSlug = "owner_admin" | "manager" | "staff";
+export type UserRoleSlug = "super_admin" | "owner_admin" | "manager" | "staff";
 
 export interface FacilityOption {
   id: string;
